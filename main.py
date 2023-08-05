@@ -28,6 +28,11 @@ MORSE_ARR = []
 ENGLISH_ARR = []
 
 
+ap = argparse.ArgumentParser()
+ap.add_argument("-p", "--shape-predictor", required=True,
+                help="path to facial landmark predictor")
+args = vars(ap.parse_args())
+
 
 def morse_to_english(morse_arr, english_arr):
     map = {
@@ -64,11 +69,6 @@ def morse_to_english(morse_arr, english_arr):
     else:
         morse_arr.clear()
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--shape-predictor", required=True,
-                help="path to facial landmark predictor")
-args = vars(ap.parse_args())
-
 
 def eye_aspect_ratio(eye):
     A = dist.euclidean(eye[1], eye[5])
@@ -86,6 +86,30 @@ def mouth_aspect_ratio(mouth):
     return mar
 
 
+def detect_blink(eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char):
+    if eye_aspect_ratio < EAR_THRESH:
+        eye_counter += 1
+    else:
+        if eye_counter >= consec_frames:
+            eye_total += 1
+            MORSE_ARR.append(blink_char)
+        eye_counter = 0
+    return eye_counter, eye_total
+
+
+def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total, left_total, right_total):
+    if mouth_aspect_ratio > MOUTH_AR_THRESH:
+        mouth_counter += 1
+    else:
+        if mouth_counter >= AR_CONSEC_FRAMES:
+            mouth_total += 1
+            left_total = 0
+            right_total = 0
+            morse_to_english(MORSE_ARR, ENGLISH_ARR)
+            MORSE_ARR.clear()
+        mouth_counter = 0
+    return mouth_counter, mouth_total, left_total, right_total
+
 print("[INFO] loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(args["shape_predictor"])
@@ -101,13 +125,6 @@ fileStream = False
 time.sleep(1.0)
 
 while True:
-    # if this is a file video stream, then we need to check if
-    # there any more frames left in the buffer to process
-    # if fileStream and not vs.more():
-    #     break
-    # grab the frame from the threaded video file stream, resize
-    # it, and convert it to grayscale
-    # channels)
     frame = vs.read()
     frame = imutils.resize(frame, width=450)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -127,7 +144,6 @@ while True:
         mouth = shape[mStart:mEnd]
         leftEAR = eye_aspect_ratio(leftEye)
         rightEAR = eye_aspect_ratio(rightEye)
-        # average the eye aspect ratio together for both eyes
         mar = mouth_aspect_ratio(mouth)
 
         # compute the convex hull for the left and right eye, then
@@ -138,30 +154,6 @@ while True:
         cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
-        def detect_blink(eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char):
-            if eye_aspect_ratio < EAR_THRESH:
-                eye_counter += 1
-            else:
-                if eye_counter >= consec_frames:
-                    eye_total += 1
-                    MORSE_ARR.append(blink_char)
-                eye_counter = 0
-            return eye_counter, eye_total
-
-
-        def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total, left_total, right_total):
-            if mouth_aspect_ratio > MOUTH_AR_THRESH:
-                mouth_counter += 1
-            else:
-                if mouth_counter >= AR_CONSEC_FRAMES:
-                    mouth_total += 1
-                    left_total = 0
-                    right_total = 0
-                    morse_to_english(MORSE_ARR, ENGLISH_ARR)
-                    MORSE_ARR.clear()
-                mouth_counter = 0
-            return mouth_counter, mouth_total, left_total, right_total
-
 
         # Assuming you have computed the eye_aspect_ratio (leftEAR and rightEAR) and mouth_aspect_ratio (mar)
         LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(leftEAR, EYE_AR_THRESH, LEFT_EYE_COUNTER, LEFT_EYE_TOTAL,
@@ -182,8 +174,6 @@ while True:
         cv2.putText(frame, "ENGLISH: {}".format("".join(ENGLISH_ARR)), (10, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "EAR: {:.2f}".format(leftEAR), (300, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "EAR: {:.2f}".format(rightEAR), (600, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
