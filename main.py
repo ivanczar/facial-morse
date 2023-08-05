@@ -12,45 +12,57 @@ import time
 import dlib
 import cv2
 
-EYE_AR_THRESH = 0.15
+EYE_AR_THRESH = 0.19
 MOUTH_AR_THRESH = 0.7
 
-EYE_COUNTER = 0
+LEFT_EYE_COUNTER = 0
+RIGHT_EYE_COUNTER = 0
 MOUTH_COUNTER = 0
 
-EYE_TOTAL = 0
+LEFT_EYE_TOTAL = 0
+RIGHT_EYE_TOTAL = 0
 MOUTH_TOTAL = 0
+AR_CONSEC_FRAMES = 5
 
-AR_CONSEC_FRAMES = 3
+MORSE_ARR = []
+ENGLISH_ARR = []
 
-morse_to_english = {
-    '.-': 'A',
-    '-...': 'B',
-    '-.-.': 'C',
-    '-..': 'D',
-    '.': 'E',
-    '..-.': 'F',
-    '--.': 'G',
-    '....': 'H',
-    '..': 'I',
-    '.---': 'J',
-    '-.-': 'K',
-    '.-..': 'L',
-    '--': 'M',
-    '-.': 'N',
-    '---': 'O',
-    '.--.': 'P',
-    '--.-': 'Q',
-    '.-.': 'R',
-    '...': 'S',
-    '-': 'T',
-    '..-': 'U',
-    '...-': 'V',
-    '.--': 'W',
-    '-..-': 'X',
-    '-.--': 'Y',
-    '--..': 'Z',
-}
+
+
+def morse_to_english(morse_arr, english_arr):
+    map = {
+        '.-': 'A',
+        '-...': 'B',
+        '-.-.': 'C',
+        '-..': 'D',
+        '.': 'E',
+        '..-.': 'F',
+        '--.': 'G',
+        '....': 'H',
+        '..': 'I',
+        '.---': 'J',
+        '-.-': 'K',
+        '.-..': 'L',
+        '--': 'M',
+        '-.': 'N',
+        '---': 'O',
+        '.--.': 'P',
+        '--.-': 'Q',
+        '.-.': 'R',
+        '...': 'S',
+        '-': 'T',
+        '..-': 'U',
+        '...-': 'V',
+        '.--': 'W',
+        '-..-': 'X',
+        '-.--': 'Y',
+        '--..': 'Z',
+    }
+    morse_letter = "".join(morse_arr)
+    if morse_letter in map:
+        english_arr.append(map[morse_letter])
+    else:
+        morse_arr.clear()
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--shape-predictor", required=True,
@@ -116,7 +128,6 @@ while True:
         leftEAR = eye_aspect_ratio(leftEye)
         rightEAR = eye_aspect_ratio(rightEye)
         # average the eye aspect ratio together for both eyes
-        ear = (leftEAR + rightEAR) / 2.0
         mar = mouth_aspect_ratio(mouth)
 
         # compute the convex hull for the left and right eye, then
@@ -127,41 +138,52 @@ while True:
         cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
+        def detect_blink(eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char):
+            if eye_aspect_ratio < EAR_THRESH:
+                eye_counter += 1
+            else:
+                if eye_counter >= consec_frames:
+                    eye_total += 1
+                    MORSE_ARR.append(blink_char)
+                eye_counter = 0
+            return eye_counter, eye_total
 
-        # check to see if the eye aspect ratio is below the blink
-        # threshold, and if so, increment the blink frame counter
-        if ear < EYE_AR_THRESH:
-            EYE_COUNTER += 1
-        # otherwise, the eye aspect ratio is not below the blink
-        # threshold
-        else:
-            # if the eyes were closed for a sufficient number of
-            # then increment the total number of blinks
-            if EYE_COUNTER >= AR_CONSEC_FRAMES:
-                print(ear)
-                EYE_TOTAL += 1
-            # reset the eye frame counter
-            EYE_COUNTER = 0
-        if mar > MOUTH_AR_THRESH:
-            MOUTH_COUNTER += 1
-        # otherwise, the eye aspect ratio is not below the blink
-        # threshold
-        else:
-            # if the eyes were closed for a sufficient number of
-            # then increment the total number of blinks
-            if MOUTH_COUNTER >= AR_CONSEC_FRAMES:
-                print(mar)
-                MOUTH_TOTAL += 1
-            # reset the eye frame counter
-            MOUTH_COUNTER = 0
 
+        def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total, left_total, right_total):
+            if mouth_aspect_ratio > MOUTH_AR_THRESH:
+                mouth_counter += 1
+            else:
+                if mouth_counter >= AR_CONSEC_FRAMES:
+                    mouth_total += 1
+                    left_total = 0
+                    right_total = 0
+                    morse_to_english(MORSE_ARR, ENGLISH_ARR)
+                    MORSE_ARR.clear()
+                mouth_counter = 0
+            return mouth_counter, mouth_total, left_total, right_total
+
+
+        # Assuming you have computed the eye_aspect_ratio (leftEAR and rightEAR) and mouth_aspect_ratio (mar)
+        LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(leftEAR, EYE_AR_THRESH, LEFT_EYE_COUNTER, LEFT_EYE_TOTAL,
+                                                        AR_CONSEC_FRAMES, ".")
+        RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL = detect_blink(rightEAR, EYE_AR_THRESH, RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL,
+                                                          AR_CONSEC_FRAMES, "-")
+        MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL = detect_mouth(mar, MOUTH_AR_THRESH, MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL)
         # draw the total number of blinks on the frame along with
         # the computed eye aspect ratio for the frame
-        cv2.putText(frame, "Blinks: {}".format(EYE_TOTAL), (10, 30),
+        cv2.putText(frame, "L: {}".format(LEFT_EYE_TOTAL), (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "MOUTH: {}".format(MOUTH_TOTAL), (10, 60),
+        cv2.putText(frame, "R: {}".format(RIGHT_EYE_TOTAL), (80, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+        cv2.putText(frame, "M: {}".format(MOUTH_TOTAL), (150, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "MORSE: {}".format("".join(MORSE_ARR)), (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "ENGLISH: {}".format("".join(ENGLISH_ARR)), (10, 90),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "EAR: {:.2f}".format(leftEAR), (300, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "EAR: {:.2f}".format(rightEAR), (600, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
