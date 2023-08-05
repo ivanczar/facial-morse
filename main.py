@@ -13,10 +13,15 @@ import dlib
 import cv2
 
 EYE_AR_THRESH = 0.15
-EYE_AR_CONSEC_FRAMES = 3
-# initialize the frame counters and the total number of blinks
-COUNTER = 0
-TOTAL = 0
+MOUTH_AR_THRESH = 0.7
+
+EYE_COUNTER = 0
+MOUTH_COUNTER = 0
+
+EYE_TOTAL = 0
+MOUTH_TOTAL = 0
+
+AR_CONSEC_FRAMES = 3
 
 morse_to_english = {
     '.-': 'A',
@@ -61,12 +66,21 @@ def eye_aspect_ratio(eye):
     return ear
 
 
+def mouth_aspect_ratio(mouth):
+    A = dist.euclidean(mouth[2], mouth[10])
+    B = dist.euclidean(mouth[4], mouth[8])
+    C = dist.euclidean(mouth[0], mouth[6])
+    mar = (A + B) / (2.0 * C)
+    return mar
+
+
 print("[INFO] loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor(args["shape_predictor"])
 
 (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
 (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
+(mStart, mEnd) = face_utils.FACIAL_LANDMARKS_IDXS["mouth"]
 
 print("[INFO] starting video stream thread...")
 vs = VideoStream(src=0).start()
@@ -98,38 +112,58 @@ while True:
         # coordinates to compute the eye aspect ratio for both eyes
         leftEye = shape[lStart:lEnd]
         rightEye = shape[rStart:rEnd]
+        mouth = shape[mStart:mEnd]
         leftEAR = eye_aspect_ratio(leftEye)
         rightEAR = eye_aspect_ratio(rightEye)
         # average the eye aspect ratio together for both eyes
         ear = (leftEAR + rightEAR) / 2.0
+        mar = mouth_aspect_ratio(mouth)
 
         # compute the convex hull for the left and right eye, then
         # visualize each of the eyes
         leftEyeHull = cv2.convexHull(leftEye)
         rightEyeHull = cv2.convexHull(rightEye)
+        mouthHull = cv2.convexHull(mouth)
         cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
+        cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
 
         # check to see if the eye aspect ratio is below the blink
         # threshold, and if so, increment the blink frame counter
         if ear < EYE_AR_THRESH:
-            COUNTER += 1
+            EYE_COUNTER += 1
         # otherwise, the eye aspect ratio is not below the blink
         # threshold
         else:
             # if the eyes were closed for a sufficient number of
             # then increment the total number of blinks
-            if COUNTER >= EYE_AR_CONSEC_FRAMES:
+            if EYE_COUNTER >= AR_CONSEC_FRAMES:
                 print(ear)
-                TOTAL += 1
+                EYE_TOTAL += 1
             # reset the eye frame counter
-            COUNTER = 0
+            EYE_COUNTER = 0
+        if mar > MOUTH_AR_THRESH:
+            MOUTH_COUNTER += 1
+        # otherwise, the eye aspect ratio is not below the blink
+        # threshold
+        else:
+            # if the eyes were closed for a sufficient number of
+            # then increment the total number of blinks
+            if MOUTH_COUNTER >= AR_CONSEC_FRAMES:
+                print(mar)
+                MOUTH_TOTAL += 1
+            # reset the eye frame counter
+            MOUTH_COUNTER = 0
 
         # draw the total number of blinks on the frame along with
         # the computed eye aspect ratio for the frame
-        cv2.putText(frame, "Blinks: {}".format(TOTAL), (10, 30),
+        cv2.putText(frame, "Blinks: {}".format(EYE_TOTAL), (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "MOUTH: {}".format(MOUTH_TOTAL), (10, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
