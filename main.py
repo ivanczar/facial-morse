@@ -12,7 +12,7 @@ import time
 import dlib
 import cv2
 
-EYE_AR_THRESH = 0.19
+EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
 
 LEFT_EYE_COUNTER = 0
@@ -102,11 +102,15 @@ def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total
         mouth_counter += 1
     else:
         if mouth_counter >= AR_CONSEC_FRAMES:
-            mouth_total += 1
-            left_total = 0
-            right_total = 0
-            morse_to_english(MORSE_ARR, ENGLISH_ARR)
-            MORSE_ARR.clear()
+            if (left_total == 0 and right_total == 0):
+                ENGLISH_ARR.clear()
+                mouth_total = 0
+            else:
+                mouth_total += 1
+                left_total = 0
+                right_total = 0
+                morse_to_english(MORSE_ARR, ENGLISH_ARR)
+                MORSE_ARR.clear()
         mouth_counter = 0
     return mouth_counter, mouth_total, left_total, right_total
 
@@ -173,9 +177,11 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "ENGLISH: {}".format("".join(ENGLISH_ARR)), (10, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "EAR: {:.2f}".format(leftEAR), (300, 30),
+        cv2.putText(frame, "L-EAR: {:.2f}".format(leftEAR), (300, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 60),
+        cv2.putText(frame, "R-EAR: {:.2f}".format(leftEAR), (300, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
