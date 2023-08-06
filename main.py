@@ -30,7 +30,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("-p", "--shape-predictor", required=True,
                 help="path to facial landmark predictor")
 args = vars(ap.parse_args())
-
+FRAME_WIDTH = 750
 
 def morse_to_english(morse_arr, english_arr):
     map = {
@@ -128,7 +128,7 @@ time.sleep(1.0)
 
 while True:
     frame = vs.read()
-    frame = imutils.resize(frame, width=450)
+    frame = imutils.resize(frame, width=FRAME_WIDTH)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     rects = detector(gray, 0)
 
@@ -171,13 +171,14 @@ while True:
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "ENGLISH: {}".format("".join(ENGLISH_ARR)), (10, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "L-EAR: {:.2f}".format(leftEAR), (300, 30),
+
+        cv2.putText(frame, "L-EAR: {:.2f}".format(leftEAR), (FRAME_WIDTH-150, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "R-EAR: {:.2f}".format(leftEAR), (300, 60),
+        cv2.putText(frame, "R-EAR: {:.2f}".format(leftEAR), (FRAME_WIDTH-150, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "MAR: {:.2f}".format(mar), (300, 90),
+        cv2.putText(frame, "MAR: {:.2f}".format(mar), (FRAME_WIDTH-150, 90),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-    cv2.imshow("Frame", frame)
+    cv2.imshow("Facial Morse | Freestyle", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
