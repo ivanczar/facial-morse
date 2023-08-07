@@ -16,7 +16,7 @@ from randomwords import getWordDict
 EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
 FRAME_WIDTH = 750
-AR_CONSEC_FRAMES = 5
+AR_CONSEC_FRAMES = 10
 
 RANDOM_WORD = getWordDict()
 COLORS = [(0, 255, 0), (255, 0, 0), (0, 0, 255)]
@@ -280,7 +280,7 @@ while True:
         )
 
         color_individual_letters(
-            frame, RANDOM_WORD, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 2
+            frame, RANDOM_WORD, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
         )
     cv2.imshow("Frame", frame)
     cv2.setWindowTitle("Frame", "Facial Morse | " + MODE)
