@@ -1,17 +1,21 @@
 # detect each individual facial expression (https://pyimagesearch.com/2017/04/24/eye-blink-detection-opencv-python-dlib/)
 
-from scipy.spatial import distance as dist
-from imutils.video import VideoStream
-from imutils import face_utils
-import numpy as np
 import argparse
-import imutils
 import time
-import dlib
+
 import cv2
+import dlib
+import imutils
+import numpy as np
+from imutils import face_utils
+from imutils.video import VideoStream
+from scipy.spatial import distance as dist
 
 EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
+FRAME_WIDTH = 750
+AR_CONSEC_FRAMES = 5
+
 
 LEFT_EYE_COUNTER = 0
 RIGHT_EYE_COUNTER = 0
@@ -20,46 +24,46 @@ MOUTH_COUNTER = 0
 LEFT_EYE_TOTAL = 0
 RIGHT_EYE_TOTAL = 0
 MOUTH_TOTAL = 0
-AR_CONSEC_FRAMES = 5
 
 MORSE_ARR = []
 ENGLISH_ARR = []
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--shape-predictor", required=True,
-                help="path to facial landmark predictor")
+ap.add_argument(
+    "-p", "--shape-predictor", required=True, help="path to facial landmark predictor"
+)
 args = vars(ap.parse_args())
-FRAME_WIDTH = 750
+
 
 def morse_to_english(morse_arr, english_arr):
     map = {
-        '.-': 'A',
-        '-...': 'B',
-        '-.-.': 'C',
-        '-..': 'D',
-        '.': 'E',
-        '..-.': 'F',
-        '--.': 'G',
-        '....': 'H',
-        '..': 'I',
-        '.---': 'J',
-        '-.-': 'K',
-        '.-..': 'L',
-        '--': 'M',
-        '-.': 'N',
-        '---': 'O',
-        '.--.': 'P',
-        '--.-': 'Q',
-        '.-.': 'R',
-        '...': 'S',
-        '-': 'T',
-        '..-': 'U',
-        '...-': 'V',
-        '.--': 'W',
-        '-..-': 'X',
-        '-.--': 'Y',
-        '--..': 'Z',
+        ".-": "A",
+        "-...": "B",
+        "-.-.": "C",
+        "-..": "D",
+        ".": "E",
+        "..-.": "F",
+        "--.": "G",
+        "....": "H",
+        "..": "I",
+        ".---": "J",
+        "-.-": "K",
+        ".-..": "L",
+        "--": "M",
+        "-.": "N",
+        "---": "O",
+        ".--.": "P",
+        "--.-": "Q",
+        ".-.": "R",
+        "...": "S",
+        "-": "T",
+        "..-": "U",
+        "...-": "V",
+        ".--": "W",
+        "-..-": "X",
+        "-.--": "Y",
+        "--..": "Z",
     }
     morse_letter = "".join(morse_arr)
     if morse_letter in map:
@@ -84,7 +88,9 @@ def mouth_aspect_ratio(mouth):
     return mar
 
 
-def detect_blink(eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char):
+def detect_blink(
+    eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char
+):
     if eye_aspect_ratio < EAR_THRESH:
         eye_counter += 1
     else:
@@ -95,12 +101,19 @@ def detect_blink(eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_fr
     return eye_counter, eye_total
 
 
-def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total, left_total, right_total):
+def detect_mouth(
+    mouth_aspect_ratio,
+    MOUTH_AR_THRESH,
+    mouth_counter,
+    mouth_total,
+    left_total,
+    right_total,
+):
     if mouth_aspect_ratio > MOUTH_AR_THRESH:
         mouth_counter += 1
     else:
         if mouth_counter >= AR_CONSEC_FRAMES:
-            if (left_total == 0 and right_total == 0 and ENGLISH_ARR):
+            if left_total == 0 and right_total == 0 and ENGLISH_ARR:
                 ENGLISH_ARR.pop()
                 mouth_total = 0
             else:
@@ -111,6 +124,7 @@ def detect_mouth(mouth_aspect_ratio, MOUTH_AR_THRESH, mouth_counter, mouth_total
                 MORSE_ARR.clear()
         mouth_counter = 0
     return mouth_counter, mouth_total, left_total, right_total
+
 
 print("[INFO] loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
@@ -147,7 +161,6 @@ while True:
         rightEAR = eye_aspect_ratio(rightEye)
         mar = mouth_aspect_ratio(mouth)
 
-
         leftEyeHull = cv2.convexHull(leftEye)
         rightEyeHull = cv2.convexHull(rightEye)
         mouthHull = cv2.convexHull(mouth)
@@ -155,29 +168,104 @@ while True:
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
 
-        LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(leftEAR, EYE_AR_THRESH, LEFT_EYE_COUNTER, LEFT_EYE_TOTAL,
-                                                        AR_CONSEC_FRAMES, ".")
-        RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL = detect_blink(rightEAR, EYE_AR_THRESH, RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL,
-                                                          AR_CONSEC_FRAMES, "-")
-        MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL = detect_mouth(mar, MOUTH_AR_THRESH, MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL)
+        LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(
+            leftEAR,
+            EYE_AR_THRESH,
+            LEFT_EYE_COUNTER,
+            LEFT_EYE_TOTAL,
+            AR_CONSEC_FRAMES,
+            ".",
+        )
+        RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL = detect_blink(
+            rightEAR,
+            EYE_AR_THRESH,
+            RIGHT_EYE_COUNTER,
+            RIGHT_EYE_TOTAL,
+            AR_CONSEC_FRAMES,
+            "-",
+        )
+        MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL = detect_mouth(
+            mar,
+            MOUTH_AR_THRESH,
+            MOUTH_COUNTER,
+            MOUTH_TOTAL,
+            LEFT_EYE_TOTAL,
+            RIGHT_EYE_TOTAL,
+        )
 
-        cv2.putText(frame, "L: {}".format(LEFT_EYE_TOTAL), (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "R: {}".format(RIGHT_EYE_TOTAL), (80, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "M: {}".format(MOUTH_TOTAL), (150, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "MORSE: {}".format("".join(MORSE_ARR)), (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "ENGLISH: {}".format("".join(ENGLISH_ARR)), (10, 90),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(
+            frame,
+            "L: {}".format(LEFT_EYE_TOTAL),
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "R: {}".format(RIGHT_EYE_TOTAL),
+            (80, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "M: {}".format(MOUTH_TOTAL),
+            (150, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "MORSE: {}".format("".join(MORSE_ARR)),
+            (10, 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "ENGLISH: {}".format("".join(ENGLISH_ARR)),
+            (10, 90),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
 
-        cv2.putText(frame, "L-EAR: {:.2f}".format(leftEAR), (FRAME_WIDTH-150, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "R-EAR: {:.2f}".format(leftEAR), (FRAME_WIDTH-150, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        cv2.putText(frame, "MAR: {:.2f}".format(mar), (FRAME_WIDTH-150, 90),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        cv2.putText(
+            frame,
+            "L-EAR: {:.2f}".format(leftEAR),
+            (FRAME_WIDTH - 150, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "R-EAR: {:.2f}".format(leftEAR),
+            (FRAME_WIDTH - 150, 60),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
+        cv2.putText(
+            frame,
+            "MAR: {:.2f}".format(mar),
+            (FRAME_WIDTH - 150, 90),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 255),
+            2,
+        )
     cv2.imshow("Facial Morse | Freestyle", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
