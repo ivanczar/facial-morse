@@ -11,11 +11,15 @@ from imutils import face_utils
 from imutils.video import VideoStream
 from scipy.spatial import distance as dist
 
+from randomwords import getWordDict
+
 EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
 FRAME_WIDTH = 750
 AR_CONSEC_FRAMES = 5
 
+RANDOM_WORD = getWordDict()
+COLORS = [(0, 255, 0), (255, 0, 0), (0, 0, 255)]
 
 LEFT_EYE_COUNTER = 0
 RIGHT_EYE_COUNTER = 0
@@ -28,6 +32,7 @@ MOUTH_TOTAL = 0
 MORSE_ARR = []
 ENGLISH_ARR = []
 
+MODE = "Freestyle"
 
 ap = argparse.ArgumentParser()
 ap.add_argument(
@@ -124,6 +129,13 @@ def detect_mouth(
                 MORSE_ARR.clear()
         mouth_counter = 0
     return mouth_counter, mouth_total, left_total, right_total
+
+
+def color_individual_letters(img, text, position, font_face, font_scale):
+    x, y = position
+    for letter, color in text.items():
+        cv2.putText(img, letter, (x, y), font_face, font_scale, color, thickness=2)
+        x += cv2.getTextSize(letter, font_face, font_scale, thickness=2)[0][0]
 
 
 print("[INFO] loading facial landmark predictor...")
@@ -266,8 +278,15 @@ while True:
             (0, 0, 255),
             2,
         )
-    cv2.imshow("Facial Morse | Freestyle", frame)
+
+        color_individual_letters(
+            frame, RANDOM_WORD, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 2
+        )
+    cv2.imshow("Frame", frame)
+    cv2.setWindowTitle("Frame", "Facial Morse | " + MODE)
     key = cv2.waitKey(1) & 0xFF
+    if key == ord("l"):
+        MODE = "Learning"
     if key == ord("q"):
         break
 cv2.destroyAllWindows()
