@@ -1,6 +1,7 @@
 import random
 
-easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
+# easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
+easy = ["a"]
 # hard = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
 
 

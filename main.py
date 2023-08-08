@@ -120,6 +120,7 @@ def detect_mouth(
         if mouth_counter >= AR_CONSEC_FRAMES:
             if left_total == 0 and right_total == 0 and ENGLISH_ARR:
                 ENGLISH_ARR.pop()
+                # TODO: set array index of letter removed back to None
                 mouth_total = 0
             else:
                 mouth_total += 1
@@ -131,28 +132,50 @@ def detect_mouth(
     return mouth_counter, mouth_total, left_total, right_total
 
 
-def color_individual_letters(img, text, position, font_face, font_scale):
+def color_individual_letters(img, random_word_dict, position, font_face, font_scale):
     x, y = position
-    word = list(text.keys())[0]
-    colors_arr = text[word]
+    word = list(random_word_dict.keys())[0]
+    colors_arr = random_word_dict[word]
     color_code = ()
     for i, letter in enumerate(word):
         match colors_arr[i]:
             case True:
                 color_code = (0, 255, 0)
             case False:
-                color_code = (255, 0, 0)
-            case _:
+                color_code = (0, 0, 255)
+            case None:
                 color_code = (129, 129, 129)
         cv2.putText(img, letter, (x, y), font_face, font_scale, color_code, thickness=2)
         x += cv2.getTextSize(letter, font_face, font_scale, thickness=2)[0][0]
 
 
-# def check_word(ENGLISH_ARRAY, RANDOM_WORD_DICT):
-# for i,letter in ENGLISH_ARRAY:
-#         If the letter == ith key in dict
-#         Update ith value to green
-#           else set to red
+def check_word(english_arr, random_word_dict):
+    match_count = 0
+    word = list(random_word_dict.keys())[0]
+    colors_arr = random_word_dict[word]
+    if colors_arr.count((True) == len(colors_arr)):
+        cv2.putText(
+            frame,
+            "WIN!!",
+            (FRAME_WIDTH - 150, 170),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 255, 0),
+            2,
+        )
+        return
+
+    for i in range(0, len(english_arr)):
+        match (english_arr[i] == word[i]):
+            case True:
+                match_count += 1
+                colors_arr[i] = True
+            case False:
+                colors_arr[i] = False
+            case _:
+                colors_arr[i] = None  # Is tthis needed? Probably not
+                # continue
+
 
 print("[INFO] loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
@@ -195,6 +218,8 @@ while True:
         cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
+
+        check_word(ENGLISH_ARR, RANDOM_WORD_DICT)
 
         LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(
             leftEAR,
@@ -298,6 +323,7 @@ while True:
         color_individual_letters(
             frame, RANDOM_WORD_DICT, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
         )
+
     cv2.imshow("Frame", frame)
     cv2.setWindowTitle("Frame", "Facial Morse | " + MODE)
     key = cv2.waitKey(1) & 0xFF
