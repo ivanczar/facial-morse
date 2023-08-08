@@ -113,14 +113,18 @@ def detect_mouth(
     mouth_total,
     left_total,
     right_total,
+    random_word_dict,
 ):
+    word = list(random_word_dict.keys())[0]
+    colors_arr = random_word_dict[word]
     if mouth_aspect_ratio > MOUTH_AR_THRESH:
         mouth_counter += 1
     else:
         if mouth_counter >= AR_CONSEC_FRAMES:
             if left_total == 0 and right_total == 0 and ENGLISH_ARR:
+                pop_index = len(ENGLISH_ARR) - 1
+                colors_arr[pop_index] = None
                 ENGLISH_ARR.pop()
-                # TODO: set array index of letter removed back to None
                 mouth_total = 0
             else:
                 mouth_total += 1
@@ -244,6 +248,7 @@ while True:
             MOUTH_TOTAL,
             LEFT_EYE_TOTAL,
             RIGHT_EYE_TOTAL,
+            RANDOM_WORD_DICT,
         )
 
         cv2.putText(
