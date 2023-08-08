@@ -11,14 +11,14 @@ from imutils import face_utils
 from imutils.video import VideoStream
 from scipy.spatial import distance as dist
 
-from randomwords import getWordDict
+from randomwords import get_word_dict
 
 EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
 FRAME_WIDTH = 750
 AR_CONSEC_FRAMES = 10
 
-RANDOM_WORD = getWordDict()
+RANDOM_WORD_DICT = get_word_dict()
 COLORS = [(0, 255, 0), (255, 0, 0), (0, 0, 255)]
 
 LEFT_EYE_COUNTER = 0
@@ -133,10 +133,26 @@ def detect_mouth(
 
 def color_individual_letters(img, text, position, font_face, font_scale):
     x, y = position
-    for letter, color in text.items():
-        cv2.putText(img, letter, (x, y), font_face, font_scale, color, thickness=2)
+    word = list(text.keys())[0]
+    colors_arr = text[word]
+    color_code = ()
+    for i, letter in enumerate(word):
+        match colors_arr[i]:
+            case True:
+                color_code = (0, 255, 0)
+            case False:
+                color_code = (255, 0, 0)
+            case _:
+                color_code = (129, 129, 129)
+        cv2.putText(img, letter, (x, y), font_face, font_scale, color_code, thickness=2)
         x += cv2.getTextSize(letter, font_face, font_scale, thickness=2)[0][0]
 
+
+# def check_word(ENGLISH_ARRAY, RANDOM_WORD_DICT):
+# for i,letter in ENGLISH_ARRAY:
+#         If the letter == ith key in dict
+#         Update ith value to green
+#           else set to red
 
 print("[INFO] loading facial landmark predictor...")
 detector = dlib.get_frontal_face_detector()
@@ -280,13 +296,13 @@ while True:
         )
 
         color_individual_letters(
-            frame, RANDOM_WORD, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
+            frame, RANDOM_WORD_DICT, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
         )
     cv2.imshow("Frame", frame)
     cv2.setWindowTitle("Frame", "Facial Morse | " + MODE)
     key = cv2.waitKey(1) & 0xFF
-    if key == ord("l"):
-        MODE = "Learning"
+    if key == ord("p"):
+        MODE = "Practice"
     if key == ord("q"):
         break
 cv2.destroyAllWindows()
