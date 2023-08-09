@@ -1,6 +1,7 @@
 # detect each individual facial expression (https://pyimagesearch.com/2017/04/24/eye-blink-detection-opencv-python-dlib/)
 
 import argparse
+import configparser
 import time
 
 import cv2
@@ -13,10 +14,23 @@ from scipy.spatial import distance as dist
 
 from randomword import RandomWord
 
-EYE_AR_THRESH = 0.25
-MOUTH_AR_THRESH = 0.7
-FRAME_WIDTH = 750
-AR_CONSEC_FRAMES = 10
+ap = argparse.ArgumentParser()
+ap.add_argument(
+    "-p", "--shape-predictor", required=True, help="path to facial landmark predictor"
+)
+args = vars(ap.parse_args())
+
+
+config_data = configparser.ConfigParser()
+config_data.read("config.ini")
+blink_config = config_data["BLINK"]
+cv2_config = config_data["CV2"]
+
+EYE_AR_THRESH = float(blink_config.get("EYE_AR_THRESH"))
+MOUTH_AR_THRESH = float(blink_config.get("MOUTH_AR_THRESH"))
+AR_CONSEC_FRAMES = int(blink_config.get("AR_CONSEC_FRAMES"))
+FRAME_WIDTH = int(cv2_config.get("FRAME_WIDTH"))
+
 
 RANDOM_WORD_DICT = RandomWord("easy")
 
@@ -32,12 +46,6 @@ MORSE_ARR = []
 ENGLISH_ARR = []
 
 MODE = "Freestyle"
-
-ap = argparse.ArgumentParser()
-ap.add_argument(
-    "-p", "--shape-predictor", required=True, help="path to facial landmark predictor"
-)
-args = vars(ap.parse_args())
 
 
 def morse_to_english(morse_arr, english_arr):

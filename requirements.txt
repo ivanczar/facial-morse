@@ -1,4 +1,5 @@
 cfgv==3.3.1
+configparser==6.0.0
 distlib==0.3.7
 dlib==19.24.2
 filelock==3.12.2
