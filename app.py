@@ -17,10 +17,11 @@ ap.add_argument(
     "-p", "--shape-predictor", required=True, help="path to facial landmark predictor"
 )
 args = vars(ap.parse_args())
+
 FRAME_WIDTH = 750
 
 blinks = Blinks()
-gh = GraphicsHelper(FRAME_WIDTH)
+gh = GraphicsHelper(FRAME_WIDTH, blinks)
 random_word = RandomWord("easy")
 
 left_eye_counter = 0
@@ -64,48 +65,21 @@ while True:
         leftEye = shape[lStart:lEnd]
         rightEye = shape[rStart:rEnd]
         mouth = shape[mStart:mEnd]
-        leftEAR = blinks.eye_aspect_ratio(leftEye)
-        rightEAR = blinks.eye_aspect_ratio(rightEye)
-        mar = blinks.mouth_aspect_ratio(mouth)
 
-        leftEyeHull = cv2.convexHull(leftEye)
-        rightEyeHull = cv2.convexHull(rightEye)
-        mouthHull = cv2.convexHull(mouth)
+        blinks.eye_aspect_ratio(leftEye, rightEye)
+        blinks.mouth_aspect_ratio(mouth)
 
-        gh.draw_eyes_mouth(leftEyeHull, rightEyeHull, mouthHull, frame)
+        gh.draw_eyes_mouth(leftEye, rightEye, mouth, frame)
 
-        left_eye_counter, left_eye_total = blinks.detect_blink(
-            leftEAR, left_eye_counter, left_eye_total, ".", morse_arr
-        )
-        right_eye_counter, right_eye_total = blinks.detect_blink(
-            rightEAR, right_eye_counter, right_eye_total, "-", morse_arr
-        )
-        (
-            mouth_counter,
-            mouth_total,
-            left_eye_total,
-            right_eye_total,
-        ) = blinks.detect_mouth(
-            english_arr,
-            morse_arr,
-            mar,
-            random_word,
-            mouth_total,
-            mouth_counter,
-            left_eye_total,
-            right_eye_total,
-        )
+        blinks.detect_blink(morse_arr)
+        blinks.detect_blink(morse_arr)
+        blinks.detect_mouth(english_arr, morse_arr, random_word)
+
         gh.draw_hud(
             frame,
-            left_eye_total,
-            right_eye_total,
-            mouth_total,
+            FRAME_WIDTH,
             morse_arr,
             english_arr,
-            leftEAR,
-            rightEAR,
-            mar,
-            FRAME_WIDTH,
         )
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF

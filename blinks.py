@@ -6,10 +6,6 @@ from morse_to_english import morse_to_english
 
 
 class Blinks:
-    EYE_AR_THRESH = 0
-    MOUTH_AR_THRESH = 0
-    AR_CONSEC_FRAMES = 0
-
     def __init__(self):
         config_data = configparser.ConfigParser()
         config_data.read("config.ini")
@@ -18,58 +14,71 @@ class Blinks:
         self.EYE_AR_THRESH = float(blink_config.get("EYE_AR_THRESH"))
         self.MOUTH_AR_THRESH = float(blink_config.get("MOUTH_AR_THRESH"))
         self.AR_CONSEC_FRAMES = int(blink_config.get("AR_CONSEC_FRAMES"))
+        self.left_ear = 0
+        self.right_ear = 0
+        self.mar = 0
+        self.left_eye_counter = 0
+        self.right_eye_counter = 0
+        self.mouth_counter = 0
+        self.left_eye_total = 0
+        self.right_eye_total = 0
+        self.mouth_total = 0
 
-    def eye_aspect_ratio(self, eye):
-        A = dist.euclidean(eye[1], eye[5])
-        B = dist.euclidean(eye[2], eye[4])
-        C = dist.euclidean(eye[0], eye[3])
-        ear = (A + B) / (2.0 * C)
-        return ear
+    def eye_aspect_ratio(self, left_eye, right_eye):
+        A = dist.euclidean(left_eye[1], left_eye[5])
+        B = dist.euclidean(left_eye[2], left_eye[4])
+        C = dist.euclidean(left_eye[0], left_eye[3])
+        D = dist.euclidean(right_eye[1], right_eye[5])
+        E = dist.euclidean(right_eye[2], right_eye[4])
+        F = dist.euclidean(right_eye[0], right_eye[3])
+
+        self.left_ear = (A + B) / (2.0 * C)
+        self.right_ear = (D + E) / (2.0 * F)
 
     def mouth_aspect_ratio(self, mouth):
         A = dist.euclidean(mouth[2], mouth[10])
         B = dist.euclidean(mouth[4], mouth[8])
         C = dist.euclidean(mouth[0], mouth[6])
-        mar = (A + B) / (2.0 * C)
-        return mar
+        self.mar = (A + B) / (2.0 * C)
 
-    def detect_blink(
-        self, eye_aspect_ratio, eye_counter, eye_total, blink_char, morse_arr
-    ):
-        if eye_aspect_ratio < self.EYE_AR_THRESH:
-            eye_counter += 1
+    def detect_blink(self, morse_arr):
+        if self.left_ear < self.EYE_AR_THRESH:
+            self.left_eye_counter += 1
+        if self.right_ear < self.EYE_AR_THRESH:
+            self.right_eye_counter += 1
         else:
-            if eye_counter >= self.AR_CONSEC_FRAMES:
-                eye_total += 1
-                morse_arr.append(blink_char)
-            eye_counter = 0
-        return eye_counter, eye_total
+            if self.left_eye_counter >= self.AR_CONSEC_FRAMES:
+                self.left_eye_total += 1
+                morse_arr.append(".")
+            if self.right_eye_counter >= self.AR_CONSEC_FRAMES:
+                self.right_eye_total += 1
+                morse_arr.append("-")
+            self.left_eye_counter = 0
+            self.right_eye_counter = 0
 
     def detect_mouth(
         self,
         english_arr,
         morse_arr,
-        mouth_aspect_ratio,
         random_word,
-        mouth_total,
-        mouth_counter,
-        left_eye_total,
-        right_eye_total,
     ):
-        if mouth_aspect_ratio > self.MOUTH_AR_THRESH:
-            mouth_counter += 1
+        if self.mar > self.MOUTH_AR_THRESH:
+            self.mouth_counter += 1
         else:
-            if mouth_counter >= self.AR_CONSEC_FRAMES:
-                if left_eye_total == 0 and right_eye_total == 0 and english_arr:
+            if self.mouth_counter >= self.AR_CONSEC_FRAMES:
+                if (
+                    self.left_eye_total == 0
+                    and self.right_eye_total == 0
+                    and english_arr
+                ):
                     pop_index = len(english_arr) - 1
                     random_word.update_color_arr(pop_index, None)
                     english_arr.pop()
                     mouth_total = 0
                 else:
-                    mouth_total += 1
+                    self.mouth_total += 1
                     left_total = 0
                     right_total = 0
                     morse_to_english(morse_arr, english_arr)
                     morse_arr.clear()
-            mouth_counter = 0
-        return mouth_counter, mouth_total, left_eye_total, right_eye_total
+            self.mouth_counter = 0
