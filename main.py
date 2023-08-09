@@ -11,15 +11,14 @@ from imutils import face_utils
 from imutils.video import VideoStream
 from scipy.spatial import distance as dist
 
-from randomwords import get_word_dict
+from randomword import RandomWord
 
 EYE_AR_THRESH = 0.25
 MOUTH_AR_THRESH = 0.7
 FRAME_WIDTH = 750
 AR_CONSEC_FRAMES = 10
 
-RANDOM_WORD_DICT = get_word_dict()
-COLORS = [(0, 255, 0), (255, 0, 0), (0, 0, 255)]
+RANDOM_WORD_DICT = RandomWord("easy")
 
 LEFT_EYE_COUNTER = 0
 RIGHT_EYE_COUNTER = 0
@@ -115,15 +114,13 @@ def detect_mouth(
     right_total,
     random_word_dict,
 ):
-    word = list(random_word_dict.keys())[0]
-    colors_arr = random_word_dict[word]
     if mouth_aspect_ratio > MOUTH_AR_THRESH:
         mouth_counter += 1
     else:
         if mouth_counter >= AR_CONSEC_FRAMES:
             if left_total == 0 and right_total == 0 and ENGLISH_ARR:
                 pop_index = len(ENGLISH_ARR) - 1
-                colors_arr[pop_index] = None
+                random_word_dict.set_color_value(pop_index, None)
                 ENGLISH_ARR.pop()
                 mouth_total = 0
             else:
@@ -138,11 +135,9 @@ def detect_mouth(
 
 def color_individual_letters(img, random_word_dict, position, font_face, font_scale):
     x, y = position
-    word = list(random_word_dict.keys())[0]
-    colors_arr = random_word_dict[word]
     color_code = ()
-    for i, letter in enumerate(word):
-        match colors_arr[i]:
+    for i, letter in enumerate(random_word_dict.word):
+        match random_word_dict.color_bool_array[i]:
             case True:
                 color_code = (0, 255, 0)
             case False:
@@ -155,9 +150,9 @@ def color_individual_letters(img, random_word_dict, position, font_face, font_sc
 
 def check_word(english_arr, random_word_dict):
     match_count = 0
-    word = list(random_word_dict.keys())[0]
-    colors_arr = random_word_dict[word]
-    if colors_arr.count((True) == len(colors_arr)):
+    if random_word_dict.color_bool_array.count(
+        (True) == len(random_word_dict.color_bool_array)
+    ):
         cv2.putText(
             frame,
             "WIN!!",
@@ -170,14 +165,16 @@ def check_word(english_arr, random_word_dict):
         return
 
     for i in range(0, len(english_arr)):
-        match (english_arr[i] == word[i]):
+        match (english_arr[i] == random_word_dict.word[i]):
             case True:
                 match_count += 1
-                colors_arr[i] = True
+                random_word_dict.set_color_value(i, True)
             case False:
-                colors_arr[i] = False
+                random_word_dict.set_color_value(i, False)
             case _:
-                colors_arr[i] = None  # Is tthis needed? Probably not
+                random_word_dict.set_color_value(
+                    i, None
+                )  # Is tthis needed? Probably not
                 # continue
 
 
