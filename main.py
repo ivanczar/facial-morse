@@ -32,18 +32,18 @@ AR_CONSEC_FRAMES = int(blink_config.get("AR_CONSEC_FRAMES"))
 FRAME_WIDTH = int(cv2_config.get("FRAME_WIDTH"))
 
 
-RANDOM_WORD_DICT = RandomWord("easy")
+random_word = RandomWord("easy")
 
-LEFT_EYE_COUNTER = 0
-RIGHT_EYE_COUNTER = 0
-MOUTH_COUNTER = 0
+left_eye_counter = 0
+right_eye_counter = 0
+mouth_counter = 0
 
-LEFT_EYE_TOTAL = 0
-RIGHT_EYE_TOTAL = 0
-MOUTH_TOTAL = 0
+left_eye_total = 0
+right_eye_total = 0
+mouth_total = 0
 
-MORSE_ARR = []
-ENGLISH_ARR = []
+morse_arr = []
+english_arr = []
 
 MODE = "Freestyle"
 
@@ -101,14 +101,14 @@ def mouth_aspect_ratio(mouth):
 
 
 def detect_blink(
-    eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, consec_frames, blink_char
+    eye_aspect_ratio, EAR_THRESH, eye_counter, eye_total, CONSEC_FRAME, blink_char
 ):
     if eye_aspect_ratio < EAR_THRESH:
         eye_counter += 1
     else:
-        if eye_counter >= consec_frames:
+        if eye_counter >= CONSEC_FRAME:
             eye_total += 1
-            MORSE_ARR.append(blink_char)
+            morse_arr.append(blink_char)
         eye_counter = 0
     return eye_counter, eye_total
 
@@ -120,32 +120,32 @@ def detect_mouth(
     mouth_total,
     left_total,
     right_total,
-    random_word_dict,
+    random_word,
 ):
     if mouth_aspect_ratio > MOUTH_AR_THRESH:
         mouth_counter += 1
     else:
         if mouth_counter >= AR_CONSEC_FRAMES:
-            if left_total == 0 and right_total == 0 and ENGLISH_ARR:
-                pop_index = len(ENGLISH_ARR) - 1
-                random_word_dict.set_color_value(pop_index, None)
-                ENGLISH_ARR.pop()
+            if left_total == 0 and right_total == 0 and english_arr:
+                pop_index = len(english_arr) - 1
+                random_word.update_color_arr(pop_index, None)
+                english_arr.pop()
                 mouth_total = 0
             else:
                 mouth_total += 1
                 left_total = 0
                 right_total = 0
-                morse_to_english(MORSE_ARR, ENGLISH_ARR)
-                MORSE_ARR.clear()
+                morse_to_english(morse_arr, english_arr)
+                morse_arr.clear()
         mouth_counter = 0
     return mouth_counter, mouth_total, left_total, right_total
 
 
-def color_individual_letters(img, random_word_dict, position, font_face, font_scale):
+def color_individual_letters(img, random_word, position, font_face, font_scale):
     x, y = position
     color_code = ()
-    for i, letter in enumerate(random_word_dict.word):
-        match random_word_dict.color_bool_array[i]:
+    for i, letter in enumerate(random_word.word):
+        match random_word.color_bool_array[i]:
             case True:
                 color_code = (0, 255, 0)
             case False:
@@ -156,11 +156,9 @@ def color_individual_letters(img, random_word_dict, position, font_face, font_sc
         x += cv2.getTextSize(letter, font_face, font_scale, thickness=2)[0][0]
 
 
-def check_word(english_arr, random_word_dict):
+def check_word(english_arr, random_word):
     match_count = 0
-    if random_word_dict.color_bool_array.count(
-        (True) == len(random_word_dict.color_bool_array)
-    ):
+    if random_word.color_bool_array.count((True) == len(random_word.color_bool_array)):
         cv2.putText(
             frame,
             "WIN!!",
@@ -173,16 +171,14 @@ def check_word(english_arr, random_word_dict):
         return
 
     for i in range(0, len(english_arr)):
-        match (english_arr[i] == random_word_dict.word[i]):
+        match (english_arr[i] == random_word.word[i]):
             case True:
                 match_count += 1
-                random_word_dict.set_color_value(i, True)
+                random_word.update_color_arr(i, True)
             case False:
-                random_word_dict.set_color_value(i, False)
+                random_word.update_color_arr(i, False)
             case _:
-                random_word_dict.set_color_value(
-                    i, None
-                )  # Is tthis needed? Probably not
+                random_word.update_color_arr(i, None)  # Is tthis needed? Probably not
                 # continue
 
 
@@ -228,37 +224,37 @@ while True:
         cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
         cv2.drawContours(frame, [mouthHull], -1, (0, 255, 0), 1)
 
-        check_word(ENGLISH_ARR, RANDOM_WORD_DICT)
+        check_word(english_arr, random_word)
 
-        LEFT_EYE_COUNTER, LEFT_EYE_TOTAL = detect_blink(
+        left_eye_counter, left_eye_total = detect_blink(
             leftEAR,
             EYE_AR_THRESH,
-            LEFT_EYE_COUNTER,
-            LEFT_EYE_TOTAL,
+            left_eye_counter,
+            left_eye_total,
             AR_CONSEC_FRAMES,
             ".",
         )
-        RIGHT_EYE_COUNTER, RIGHT_EYE_TOTAL = detect_blink(
+        right_eye_counter, right_eye_total = detect_blink(
             rightEAR,
             EYE_AR_THRESH,
-            RIGHT_EYE_COUNTER,
-            RIGHT_EYE_TOTAL,
+            right_eye_counter,
+            right_eye_total,
             AR_CONSEC_FRAMES,
             "-",
         )
-        MOUTH_COUNTER, MOUTH_TOTAL, LEFT_EYE_TOTAL, RIGHT_EYE_TOTAL = detect_mouth(
+        mouth_counter, mouth_total, left_eye_total, right_eye_total = detect_mouth(
             mar,
             MOUTH_AR_THRESH,
-            MOUTH_COUNTER,
-            MOUTH_TOTAL,
-            LEFT_EYE_TOTAL,
-            RIGHT_EYE_TOTAL,
-            RANDOM_WORD_DICT,
+            mouth_counter,
+            mouth_total,
+            left_eye_total,
+            right_eye_total,
+            random_word,
         )
 
         cv2.putText(
             frame,
-            "L: {}".format(LEFT_EYE_TOTAL),
+            "L: {}".format(left_eye_total),
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -267,7 +263,7 @@ while True:
         )
         cv2.putText(
             frame,
-            "R: {}".format(RIGHT_EYE_TOTAL),
+            "R: {}".format(right_eye_total),
             (80, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -276,7 +272,7 @@ while True:
         )
         cv2.putText(
             frame,
-            "M: {}".format(MOUTH_TOTAL),
+            "M: {}".format(mouth_total),
             (150, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -285,7 +281,7 @@ while True:
         )
         cv2.putText(
             frame,
-            "MORSE: {}".format("".join(MORSE_ARR)),
+            "MORSE: {}".format("".join(morse_arr)),
             (10, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -294,7 +290,7 @@ while True:
         )
         cv2.putText(
             frame,
-            "ENGLISH: {}".format("".join(ENGLISH_ARR)),
+            "ENGLISH: {}".format("".join(english_arr)),
             (10, 90),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -331,7 +327,7 @@ while True:
         )
 
         color_individual_letters(
-            frame, RANDOM_WORD_DICT, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
+            frame, random_word, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7
         )
 
     cv2.imshow("Frame", frame)
