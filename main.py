@@ -12,6 +12,7 @@ from imutils import face_utils
 from imutils.video import VideoStream
 from scipy.spatial import distance as dist
 
+from morse_to_english import morse_to_english
 from randomword import RandomWord
 
 ap = argparse.ArgumentParser()
@@ -31,7 +32,6 @@ MOUTH_AR_THRESH = float(blink_config.get("MOUTH_AR_THRESH"))
 AR_CONSEC_FRAMES = int(blink_config.get("AR_CONSEC_FRAMES"))
 FRAME_WIDTH = int(cv2_config.get("FRAME_WIDTH"))
 
-
 random_word = RandomWord("easy")
 
 left_eye_counter = 0
@@ -46,42 +46,6 @@ morse_arr = []
 english_arr = []
 
 MODE = "Freestyle"
-
-
-def morse_to_english(morse_arr, english_arr):
-    map = {
-        ".-": "A",
-        "-...": "B",
-        "-.-.": "C",
-        "-..": "D",
-        ".": "E",
-        "..-.": "F",
-        "--.": "G",
-        "....": "H",
-        "..": "I",
-        ".---": "J",
-        "-.-": "K",
-        ".-..": "L",
-        "--": "M",
-        "-.": "N",
-        "---": "O",
-        ".--.": "P",
-        "--.-": "Q",
-        ".-.": "R",
-        "...": "S",
-        "-": "T",
-        "..-": "U",
-        "...-": "V",
-        ".--": "W",
-        "-..-": "X",
-        "-.--": "Y",
-        "--..": "Z",
-    }
-    morse_letter = "".join(morse_arr)
-    if morse_letter in map:
-        english_arr.append(map[morse_letter])
-    else:
-        morse_arr.clear()
 
 
 def eye_aspect_ratio(eye):
@@ -157,7 +121,6 @@ def color_individual_letters(img, random_word, position, font_face, font_scale):
 
 
 def check_word(english_arr, random_word):
-    match_count = 0
     if random_word.color_bool_array.count((True) == len(random_word.color_bool_array)):
         cv2.putText(
             frame,
@@ -173,7 +136,6 @@ def check_word(english_arr, random_word):
     for i in range(0, len(english_arr)):
         match (english_arr[i] == random_word.word[i]):
             case True:
-                match_count += 1
                 random_word.update_color_arr(i, True)
             case False:
                 random_word.update_color_arr(i, False)
@@ -193,7 +155,6 @@ predictor = dlib.shape_predictor(args["shape_predictor"])
 print("[INFO] starting video stream thread...")
 vs = VideoStream(src=0).start()
 # vs = VideoStream(usePiCamera=True).start()
-fileStream = False
 time.sleep(1.0)
 
 while True:
@@ -201,7 +162,7 @@ while True:
     frame = imutils.resize(frame, width=FRAME_WIDTH)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     rects = detector(gray, 0)
-
+    print(rects)
     for rect in rects:
         # determine the facial landmarks for the face region, then
         # convert the facial landmark (x, y)-coordinates to a NumPy
@@ -309,7 +270,7 @@ while True:
         )
         cv2.putText(
             frame,
-            "R-EAR: {:.2f}".format(leftEAR),
+            "R-EAR: {:.2f}".format(rightEAR),
             (FRAME_WIDTH - 150, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
