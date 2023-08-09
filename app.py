@@ -1,10 +1,10 @@
 import argparse
+import configparser
 import time
 
 import cv2
 import dlib
 import imutils
-import numpy as np
 from imutils import face_utils
 from imutils.video import VideoStream
 
@@ -18,19 +18,16 @@ ap.add_argument(
 )
 args = vars(ap.parse_args())
 
+config_data = configparser.ConfigParser()
+config_data.read("config.ini")
+blink_config = config_data["BLINK"]
+cv2_config = config_data["CV2"]
+
 FRAME_WIDTH = 750
 
-blinks = Blinks()
+blinks = Blinks(blink_config)
 gh = GraphicsHelper(FRAME_WIDTH, blinks)
 random_word = RandomWord("easy")
-
-left_eye_counter = 0
-right_eye_counter = 0
-mouth_counter = 0
-
-left_eye_total = 0
-right_eye_total = 0
-mouth_total = 0
 
 morse_arr = []
 english_arr = []
@@ -61,7 +58,6 @@ while True:
         shape = predictor(gray, rect)
         shape = face_utils.shape_to_np(shape)
         # extract the left and right eye coordinates, then use the
-        # coordinates to compute the eye aspect ratio for both eyes
         leftEye = shape[lStart:lEnd]
         rightEye = shape[rStart:rEnd]
         mouth = shape[mStart:mEnd]
@@ -70,6 +66,8 @@ while True:
         blinks.mouth_aspect_ratio(mouth)
 
         gh.draw_eyes_mouth(leftEye, rightEye, mouth, frame)
+
+        # TODO: implement checkword
 
         blinks.detect_blink(morse_arr)
         blinks.detect_blink(morse_arr)
@@ -81,6 +79,8 @@ while True:
             morse_arr,
             english_arr,
         )
+
+        # gh.color_individual_letters(frame, random_word, (10,120))
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("p"):

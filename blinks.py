@@ -1,19 +1,13 @@
-import configparser
-
 from scipy.spatial import distance as dist
 
 from morse_to_english import morse_to_english
 
 
 class Blinks:
-    def __init__(self):
-        config_data = configparser.ConfigParser()
-        config_data.read("config.ini")
-        blink_config = config_data["BLINK"]
-        cv2_config = config_data["CV2"]
-        self.EYE_AR_THRESH = float(blink_config.get("EYE_AR_THRESH"))
-        self.MOUTH_AR_THRESH = float(blink_config.get("MOUTH_AR_THRESH"))
-        self.AR_CONSEC_FRAMES = int(blink_config.get("AR_CONSEC_FRAMES"))
+    def __init__(self, config):
+        self.EYE_AR_THRESH = float(config.get("EYE_AR_THRESH"))
+        self.MOUTH_AR_THRESH = float(config.get("MOUTH_AR_THRESH"))
+        self.AR_CONSEC_FRAMES = int(config.get("AR_CONSEC_FRAMES"))
         self.left_ear = 0
         self.right_ear = 0
         self.mar = 0
