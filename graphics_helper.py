@@ -2,7 +2,7 @@ import cv2
 
 
 class GraphicsHelper:
-    def __init__(self, frame_width, blink):
+    def __init__(self, frame_width, eyes, mouth):
         self.FRAME_WIDTH = frame_width
         self.blue_color = (255, 0, 0)
         self.green_color = (0, 255, 0)
@@ -12,7 +12,8 @@ class GraphicsHelper:
         self.font_scale = 0.7
         self.color = self.red_color
         self.thickness = 2
-        self.blinks = blink
+        self.eyes = eyes
+        self.mouth = mouth
 
     def draw_eyes_mouth(self, left_eye_shape, right_eye_shape, mouth_shape, frame):
         left_eye_hull = cv2.convexHull(left_eye_shape)
@@ -31,7 +32,7 @@ class GraphicsHelper:
     ):
         cv2.putText(
             frame,
-            "L: {}".format(self.blinks.left_eye_total),
+            "L: {}".format(self.eyes.left_total),
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -40,7 +41,7 @@ class GraphicsHelper:
         )
         cv2.putText(
             frame,
-            "R: {}".format(self.blinks.right_eye_total),
+            "R: {}".format(self.eyes.right_total),
             (80, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -49,7 +50,7 @@ class GraphicsHelper:
         )
         cv2.putText(
             frame,
-            "M: {}".format(self.blinks.mouth_total),
+            "M: {}".format(self.mouth.total),
             (150, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -77,7 +78,7 @@ class GraphicsHelper:
 
         cv2.putText(
             frame,
-            "L-EAR: {:.2f}".format(self.blinks.left_ear),
+            "L-EAR: {:.2f}".format(self.eyes.left_ear),
             (FRAME_WIDTH - 150, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -86,7 +87,7 @@ class GraphicsHelper:
         )
         cv2.putText(
             frame,
-            "R-EAR: {:.2f}".format(self.blinks.right_ear),
+            "R-EAR: {:.2f}".format(self.eyes.right_ear),
             (FRAME_WIDTH - 150, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -95,7 +96,7 @@ class GraphicsHelper:
         )
         cv2.putText(
             frame,
-            "MAR: {:.2f}".format(self.blinks.mar),
+            "MAR: {:.2f}".format(self.mouth.mar),
             (FRAME_WIDTH - 150, 90),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,

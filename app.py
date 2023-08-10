@@ -8,8 +8,9 @@ import imutils
 from imutils import face_utils
 from imutils.video import VideoStream
 
-from blinks import Blinks
+from eyes import Eyes
 from graphics_helper import GraphicsHelper
+from mouth import Mouth
 from randomword import RandomWord
 
 ap = argparse.ArgumentParser()
@@ -25,8 +26,9 @@ cv2_config = config_data["CV2"]
 
 FRAME_WIDTH = 750
 
-blinks = Blinks(blink_config)
-gh = GraphicsHelper(FRAME_WIDTH, blinks)
+eyes = Eyes(blink_config)
+mouth = Mouth(blink_config, eyes)
+gh = GraphicsHelper(FRAME_WIDTH, eyes, mouth)
 random_word = RandomWord("easy")
 
 morse_arr = []
@@ -58,20 +60,19 @@ while True:
         shape = predictor(gray, rect)
         shape = face_utils.shape_to_np(shape)
         # extract the left and right eye coordinates, then use the
-        leftEye = shape[lStart:lEnd]
-        rightEye = shape[rStart:rEnd]
-        mouth = shape[mStart:mEnd]
+        leftEyeShape = shape[lStart:lEnd]
+        rightEyeShape = shape[rStart:rEnd]
+        mouthShape = shape[mStart:mEnd]
 
-        blinks.eye_aspect_ratio(leftEye, rightEye)
-        blinks.mouth_aspect_ratio(mouth)
+        eyes.eye_aspect_ratio(leftEyeShape, rightEyeShape)
+        mouth.mouth_aspect_ratio(mouthShape)
 
-        gh.draw_eyes_mouth(leftEye, rightEye, mouth, frame)
+        gh.draw_eyes_mouth(leftEyeShape, rightEyeShape, mouthShape, frame)
 
         # TODO: implement checkword
 
-        blinks.detect_blink(morse_arr)
-        blinks.detect_blink(morse_arr)
-        blinks.detect_mouth(english_arr, morse_arr, random_word)
+        eyes.detect_blink(morse_arr)
+        mouth.detect_mouth(english_arr, morse_arr, random_word)
 
         gh.draw_hud(
             frame,
