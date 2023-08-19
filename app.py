@@ -1,4 +1,3 @@
-
 import time
 
 import cv2
@@ -13,11 +12,9 @@ from mouth import Mouth
 from randomword import RandomWord
 
 
-
 class App:
 
     def __init__(self, blink_config, args, FRAME_WIDTH):
-
 
         self.FRAME_WIDTH = FRAME_WIDTH
         self.detector = dlib.get_frontal_face_detector()
@@ -33,9 +30,9 @@ class App:
 
     def toggle_mode(self):
         self.is_learning = not self.is_learning
+
     def start(self):
         print("[INFO] loading facial landmark predictor...")
-
 
         (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
         (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
