@@ -75,6 +75,7 @@ class App:
                     self.english_arr,
                 )
 
+
                 # gh.color_individual_letters(frame, random_word, (10,120))
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
