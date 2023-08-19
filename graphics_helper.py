@@ -26,7 +26,6 @@ class GraphicsHelper:
     def draw_hud(
         self,
         frame,
-        FRAME_WIDTH,
         morse_arr,
         english_arr,
     ):
@@ -79,7 +78,7 @@ class GraphicsHelper:
         cv2.putText(
             frame,
             "L-EAR: {:.2f}".format(self.eyes.left_ear),
-            (FRAME_WIDTH - 150, 30),
+            (self.FRAME_WIDTH - 150, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (0, 0, 255),
@@ -88,7 +87,7 @@ class GraphicsHelper:
         cv2.putText(
             frame,
             "R-EAR: {:.2f}".format(self.eyes.right_ear),
-            (FRAME_WIDTH - 150, 60),
+            (self.FRAME_WIDTH - 150, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (0, 0, 255),
@@ -97,7 +96,7 @@ class GraphicsHelper:
         cv2.putText(
             frame,
             "MAR: {:.2f}".format(self.mouth.mar),
-            (FRAME_WIDTH - 150, 90),
+            (self.FRAME_WIDTH - 150, 90),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (0, 0, 255),
