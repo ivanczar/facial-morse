@@ -13,9 +13,7 @@ from randomword import RandomWord
 
 
 class App:
-
     def __init__(self, blink_config, args, FRAME_WIDTH):
-
         self.FRAME_WIDTH = FRAME_WIDTH
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor(args["shape_predictor"])
@@ -67,14 +65,15 @@ class App:
                 # TODO: implement checkword
 
                 self.eyes.detect_blink(self.morse_arr)
-                self.mouth.detect_mouth(self.english_arr, self.morse_arr, self.random_word)
+                self.mouth.detect_mouth(
+                    self.english_arr, self.morse_arr, self.random_word
+                )
 
                 self.gh.draw_hud(
                     frame,
                     self.morse_arr,
                     self.english_arr,
                 )
-
 
                 # gh.color_individual_letters(frame, random_word, (10,120))
             cv2.imshow("Frame", frame)
