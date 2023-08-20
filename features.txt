@@ -1,3 +1,0 @@
-Send translated english to email
-Allow button input for morse
-Learning mode - display random word in gray, red or green letters as user inputs letters
