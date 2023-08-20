@@ -1,7 +1,7 @@
 import random
 
 # easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
-easy = ["AA"]
+easy = ["AXAXA"]
 
 
 class RandomWord:

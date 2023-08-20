@@ -8,6 +8,7 @@ from imutils.video import VideoStream
 
 from eyes import Eyes
 from graphics_helper import GraphicsHelper
+from logger import Logger
 from mouth import Mouth
 from randomword import RandomWord
 
@@ -25,22 +26,23 @@ class App:
         self.is_learning = False
         self.morse_arr = []
         self.english_arr = []
+        # self.logger = Logger(self.random_word.word)
 
     def check_word(self, frame):
         if self.random_word.get_green_count() == len(self.random_word.word):
             self.gh.display_win(frame)
 
         for i in range(len(self.english_arr)):
-            match (self.english_arr[i] == self.random_word.word[i]):
-                case True:
-                    self.random_word.update_color_arr(i, True)
-                case False:
-                    self.random_word.update_color_arr(i, False)
-                case _:
-                    self.random_word.update_color_arr(
-                        i, None
-                    )  # Is this needed? Probably not
-                    # continue
+            if self.random_word.color_bool_array[i] is None:
+                match (self.english_arr[i] == self.random_word.word[i]):
+                    case True:
+                        self.random_word.update_color_arr(i, True)
+                        return
+                    case False:
+                        self.random_word.update_color_arr(i, False)
+                        # self.logger.update_errors()
+                        print("HERE")
+                        return
 
     def clear_arrays(self):
         self.morse_arr.clear()
@@ -87,10 +89,6 @@ class App:
 
                 self.gh.draw_eyes_mouth(leftEyeShape, rightEyeShape, mouthShape, frame)
 
-                # TODO: implement checkword
-                if self.is_learning:
-                    self.check_word(frame)
-
                 self.eyes.detect_blink(self.morse_arr)
                 self.mouth.detect_mouth(
                     self.english_arr, self.morse_arr, self.random_word
@@ -104,6 +102,7 @@ class App:
 
                 if self.is_learning:
                     self.gh.color_individual_letters(frame, self.random_word, (10, 120))
+                    self.check_word(frame)
 
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
