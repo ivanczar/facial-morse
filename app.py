@@ -26,8 +26,33 @@ class App:
         self.morse_arr = []
         self.english_arr = []
 
+    def check_word(self, frame):
+        if self.random_word.get_green_count() == len(self.random_word.word):
+            self.gh.display_win(frame)
+
+        for i in range(len(self.english_arr)):
+            match (self.english_arr[i] == self.random_word.word[i]):
+                case True:
+                    self.random_word.update_color_arr(i, True)
+                case False:
+                    self.random_word.update_color_arr(i, False)
+                case _:
+                    self.random_word.update_color_arr(
+                        i, None
+                    )  # Is this needed? Probably not
+                    # continue
+
+    def clear_arrays(self):
+        self.morse_arr.clear()
+        self.english_arr.clear()
+
     def toggle_mode(self):
+        self.clear_arrays()
         self.is_learning = not self.is_learning
+
+    def reset_learning(self):
+        self.clear_arrays()
+        self.random_word = RandomWord("easy")
 
     def start(self):
         print("[INFO] loading facial landmark predictor...")
@@ -63,6 +88,8 @@ class App:
                 self.gh.draw_eyes_mouth(leftEyeShape, rightEyeShape, mouthShape, frame)
 
                 # TODO: implement checkword
+                if self.is_learning:
+                    self.check_word(frame)
 
                 self.eyes.detect_blink(self.morse_arr)
                 self.mouth.detect_mouth(
@@ -75,9 +102,13 @@ class App:
                     self.english_arr,
                 )
 
-                # gh.color_individual_letters(frame, random_word, (10,120))
+                if self.is_learning:
+                    self.gh.color_individual_letters(frame, self.random_word, (10, 120))
+
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
+            if key == ord("r") and self.is_learning:
+                self.reset_learning()
             if key == ord("m"):
                 self.toggle_mode()
             if key == ord("q"):

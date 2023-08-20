@@ -1,6 +1,7 @@
 import random
 
-easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
+# easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
+easy = ["AA"]
 
 
 class RandomWord:
@@ -26,7 +27,5 @@ class RandomWord:
     def update_color_arr(self, index, value):
         self.color_bool_array[index] = value
 
-
-# test = RandomWord("easy")
-# print(test.word)
-# print(test.color_bool_array)
+    def get_green_count(self):
+        return self.color_bool_array.count(True)

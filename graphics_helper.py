@@ -1,3 +1,5 @@
+import math
+
 import cv2
 
 
@@ -124,3 +126,14 @@ class GraphicsHelper:
                 self.thickness,
             )
             x += cv2.getTextSize(letter, self.font, self.font_scale, thickness=2)[0][0]
+
+    def display_win(self, frame):
+        cv2.putText(
+            frame,
+            "WIN!!",
+            (math.ceil(self.FRAME_WIDTH / 2), math.ceil(self.FRAME_WIDTH / 2)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.5,
+            (0, 255, 0),
+            2,
+        )
