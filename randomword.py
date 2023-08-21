@@ -1,7 +1,17 @@
 import random
 
-# easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
-easy = ["AXAXA"]
+easy = ["host", "give", "land", "pace", "mist", "stem", "bite", "coma", "help"]
+difficult = [
+    "cottages",
+    "riddance",
+    "sluggish",
+    "speeders",
+    "sootiest",
+    "yielding",
+    "nerdiest",
+    "seabirds",
+    "jabbered",
+]
 
 
 class RandomWord:
@@ -9,14 +19,16 @@ class RandomWord:
     word = ""
     color_bool_array = []
 
-    def __init__(self, difficulty):
-        self.difficulty = difficulty
+    def __init__(self, is_easy=True):
+        self.is_easy = is_easy
         self.word = self.generate_random_word()
         self.color_bool_array = self.generate_color_bool_arr(self.word)
 
     def generate_random_word(self):
-        random_word = random.choice(easy).upper()
-        return random_word
+        if self.is_easy:
+            return random.choice(easy).upper()
+        else:
+            return random.choice(difficult).upper()
 
     def generate_color_bool_arr(self, word):
         array = []
@@ -29,3 +41,6 @@ class RandomWord:
 
     def get_green_count(self):
         return self.color_bool_array.count(True)
+
+    def get_red_count(self):
+        return self.color_bool_array.count(False)

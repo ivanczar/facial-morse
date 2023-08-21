@@ -21,17 +21,28 @@ class App:
         self.eyes = Eyes(blink_config)
         self.mouth = Mouth(blink_config, self.eyes)
         self.gh = GraphicsHelper(FRAME_WIDTH, self.eyes, self.mouth)
-        self.random_word = RandomWord("easy")
+        self.is_easy = True
+        self.random_word = RandomWord(self.is_easy)
         self.vs = VideoStream(src=0)
         self.is_learning = False
         self.morse_arr = []
         self.english_arr = []
-        # self.logger = Logger(self.random_word.word)
+        self.logger = Logger()
 
-    def check_word(self, frame):
+    def check_win_loss(self, frame):
         if self.random_word.get_green_count() == len(self.random_word.word):
             self.gh.display_win(frame)
+            self.logger.log(f"WIN: {self.random_word.word}")
+            self.logger.close()
+        if self.random_word.get_red_count() >= 1:
+            self.gh.display_loss(frame)
+            self.logger.log(
+                f"Loss: {self.random_word.word} (You entered {self.english_arr[len(self.english_arr) -1]} but needed {self.random_word.word[len(self.english_arr) -1]})"
+            )
+            self.logger.close()
 
+    def check_word(self, frame):
+        self.check_win_loss(frame)
         for i in range(len(self.english_arr)):
             if self.random_word.color_bool_array[i] is None:
                 match (self.english_arr[i] == self.random_word.word[i]):
@@ -40,8 +51,6 @@ class App:
                         return
                     case False:
                         self.random_word.update_color_arr(i, False)
-                        # self.logger.update_errors()
-                        print("HERE")
                         return
 
     def clear_arrays(self):
@@ -52,9 +61,13 @@ class App:
         self.clear_arrays()
         self.is_learning = not self.is_learning
 
+    def toggle_difficulty(self):
+        self.is_easy = not self.is_easy
+        self.reset_learning()
+
     def reset_learning(self):
         self.clear_arrays()
-        self.random_word = RandomWord("easy")
+        self.random_word = RandomWord(self.is_easy)
 
     def start(self):
         print("[INFO] loading facial landmark predictor...")
@@ -106,11 +119,18 @@ class App:
 
             cv2.imshow("Frame", frame)
             key = cv2.waitKey(1) & 0xFF
-            if key == ord("r") and self.is_learning:
-                self.reset_learning()
+            if key == ord("d"):
+                if self.is_learning:
+                    self.toggle_difficulty()
+            if key == ord("r"):
+                if self.is_learning:
+                    self.reset_learning()
+                else:
+                    self.clear_arrays()
             if key == ord("m"):
                 self.toggle_mode()
             if key == ord("q"):
                 break
         cv2.destroyAllWindows()
+        self.logger.close()
         self.vs.stop()

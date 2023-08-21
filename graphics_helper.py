@@ -86,15 +86,7 @@ class GraphicsHelper:
             (0, 0, 255),
             2,
         )
-        # cv2.putText(
-        #     frame,
-        #     "R-EAR: {:.2f}".format(self.eyes.right_ear),
-        #     (self.FRAME_WIDTH - 150, 60),
-        #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     0.7,
-        #     (0, 0, 255),
-        #     2,
-        # )
+
         cv2.putText(
             frame,
             "MAR: {:.2f}".format(self.mouth.mar),
@@ -130,10 +122,21 @@ class GraphicsHelper:
     def display_win(self, frame):
         cv2.putText(
             frame,
-            "WIN!!",
+            "You Win!!",
             (math.ceil(self.FRAME_WIDTH / 2), math.ceil(self.FRAME_WIDTH / 2)),
             cv2.FONT_HERSHEY_SIMPLEX,
             1.5,
             (0, 255, 0),
+            2,
+        )
+
+    def display_loss(self, frame):
+        cv2.putText(
+            frame,
+            "You Lost",
+            (math.ceil(self.FRAME_WIDTH / 2), math.ceil(self.FRAME_WIDTH / 2)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1.5,
+            (0, 0, 255),
             2,
         )
