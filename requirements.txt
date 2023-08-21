@@ -6,6 +6,7 @@ filelock==3.12.2
 identify==2.5.26
 imageio==2.31.1
 imutils==0.5.4
+iniconfig==2.0.0
 lazy_loader==0.3
 networkx==3.1
 nodeenv==1.8.0
@@ -15,7 +16,9 @@ opencv-python==4.8.0.74
 packaging==23.1
 Pillow==10.0.0
 platformdirs==3.10.0
+pluggy==1.2.0
 pre-commit==3.3.3
+pytest==7.4.0
 PyWavelets==1.4.1
 PyYAML==6.0.1
 scikit-image==0.21.0
