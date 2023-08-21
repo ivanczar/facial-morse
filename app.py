@@ -21,10 +21,10 @@ class App:
         self.eyes = Eyes(blink_config)
         self.mouth = Mouth(blink_config, self.eyes)
         self.gh = GraphicsHelper(FRAME_WIDTH, self.eyes, self.mouth)
+        self.is_learning = False
         self.is_easy = True
         self.random_word = RandomWord(self.is_easy)
         self.vs = VideoStream(src=0)
-        self.is_learning = False
         self.morse_arr = []
         self.english_arr = []
         self.logger = Logger()
@@ -72,6 +72,7 @@ class App:
     def start(self):
         print("[INFO] loading facial landmark predictor...")
 
+        ######## Adapted from: https://pyimagesearch.com/2017/04/24/eye-blink-detection-opencv-python-dlib/ ###
         (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
         (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
         (mStart, mEnd) = face_utils.FACIAL_LANDMARKS_IDXS["mouth"]
@@ -87,16 +88,13 @@ class App:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             rects = self.detector(gray, 0)
             for rect in rects:
-                # determine the facial landmarks for the face region, then
-                # convert the facial landmark (x, y)-coordinates to a NumPy
-                # array
                 shape = self.predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
-                # extract the left and right eye coordinates, then use the
+
                 leftEyeShape = shape[lStart:lEnd]
                 rightEyeShape = shape[rStart:rEnd]
                 mouthShape = shape[mStart:mEnd]
-
+                ##############################################################################
                 self.eyes.eye_aspect_ratio(leftEyeShape, rightEyeShape)
                 self.mouth.mouth_aspect_ratio(mouthShape)
 
