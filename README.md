@@ -12,10 +12,9 @@ the aspect-ratio method is preferred.
 
 ## The facial-morse system
 
-- Left eye blink = dot
-- Right eye blink = dash
-- Both blink = end of word
-- Open mouth = begin/end translation
+- Short blink = dot
+- Long blink = dash
+- Open mouth = end morse sequence/backspace
 
 ## How to run locally from CLI
 

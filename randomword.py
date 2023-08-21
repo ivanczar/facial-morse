@@ -15,10 +15,6 @@ difficult = [
 
 
 class RandomWord:
-    difficulty = ""
-    word = ""
-    color_bool_array = []
-
     def __init__(self, is_easy=True):
         self.is_easy = is_easy
         self.word = self.generate_random_word()
