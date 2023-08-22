@@ -1,12 +1,17 @@
-name: Run Python tests
-
+name: Lint and Test
 on: [push]
-
 jobs:
+  linter_name:
+    name: Black formatter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: rickstaa/action-black@v1
+        with:
+          black_args: ". --check"
   build:
     name: Run tests
     runs-on: ubuntu-latest
-
     steps:
       - uses: szenius/set-timezone@v1.2
         with:
