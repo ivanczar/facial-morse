@@ -1,8 +1,8 @@
 name: Lint and Test
-on: [push]
+on: [push, pull_request]
 jobs:
   linter_name:
-    name: Black formatter
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

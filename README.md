@@ -16,6 +16,12 @@ the aspect-ratio method is preferred.
 - Long blink = dash
 - Open mouth = end morse sequence/backspace
 
+## Features
+
+- Freestyle mode: Test your morse knowledge in freestly mode
+- Practice mode: Practice your skills by playing with a randomly generated word
+- Match logging: View your past attempts and learn from your mistakes
+
 ## How to run locally from CLI
 
 1. Ensure python3, pip, OpenCV4 (and its dependencies) are installed on your system
