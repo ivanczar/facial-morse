@@ -3,7 +3,6 @@ from scipy.spatial import distance as dist
 from morse_to_english import morse_to_english
 
 
-# TODO: Separate into Eye and Mouth Class and inherit from abstract Landmark class
 class Mouth:
     def __init__(self, config, eyes):
         self.MOUTH_AR_THRESH = float(config.get("MOUTH_AR_THRESH"))
