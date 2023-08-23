@@ -12,10 +12,15 @@ the aspect-ratio method is preferred.
 
 ## The facial-morse system
 
-- Left eye blink = dot
-- Right eye blink = dash
-- Both blink = end of word
-- Open mouth = begin/end translation
+- Short blink = dot
+- Long blink = dash
+- Open mouth = end morse sequence/backspace
+
+## Features
+
+- Freestyle mode: Test your morse knowledge in freestly mode
+- Practice mode: Practice your skills by playing with a randomly generated word
+- Match logging: View your past attempts and learn from your mistakes
 
 ## How to run locally from CLI
 

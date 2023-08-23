@@ -6,7 +6,7 @@ TODO: QUESTIONS
 Should i instantiate all objects (eye,mouth,graphics-helper) in main and pass them into App class?
     Should videostream, detector, and predictor be created in App or in main and passed into App?
 Difference between passing into class constructor and then using self. within class methods vs just passing object as argumentto method (i.e pass eyes object to detect_mouth instead of passing to constructor of Mouth)
-
+Should i structure classes as packages? or is this flat structure OK?
 Anything else i could improve on structure-wise?
 """
 import argparse
